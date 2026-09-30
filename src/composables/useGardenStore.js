@@ -9,6 +9,7 @@ import {
   createId,
   getDashboard,
   getDueWateringPlants,
+  getLastWateredDate,
   getWateringStatus,
   updateWateringGoal,
 } from '../services/gardenRules'
@@ -130,22 +131,66 @@ export function useGardenStore() {
     })
   }
 
+  // 浇水记录变动后，按剩余养护记录重算对应植物的上次浇水日期。
+  // 这是待浇水提醒、逾期状态、连续天数立即回到正确值的关键。
+  function recalcPlantWateringDate(plantId) {
+    const plant = state.plants.find((item) => item.id === plantId)
+    if (!plant) return
+    plant.lastWateredDate = getLastWateredDate(plant, state.careRecords)
+  }
+
   function addCareRecord(payload) {
     const record = { ...payload, id: createId('care') }
     state.careRecords.unshift(record)
 
-    if (record.type === '浇水') {
-      const plant = state.plants.find((item) => item.id === record.plantId)
-      if (plant) plant.lastWateredDate = record.date
+    if (record.type === '浇水') recalcPlantWateringDate(record.plantId)
+  }
+
+  function updateCareRecord(id, payload) {
+    const index = state.careRecords.findIndex((record) => record.id === id)
+    if (index === -1) return
+    const old = state.careRecords[index]
+    state.careRecords[index] = { ...old, ...payload, id }
+
+    // 浇水记录的日期、类型或所属植物变化后，相关植物的上次浇水日期都要重算。
+    recalcPlantWateringDate(old.plantId)
+    if (old.plantId !== state.careRecords[index].plantId) {
+      recalcPlantWateringDate(state.careRecords[index].plantId)
     }
+  }
+
+  function deleteCareRecord(id) {
+    const record = state.careRecords.find((item) => item.id === id)
+    state.careRecords = state.careRecords.filter((item) => item.id !== id)
+    if (record?.type === '浇水') recalcPlantWateringDate(record.plantId)
   }
 
   function addGrowthRecord(payload) {
     state.growthRecords.unshift({ ...payload, id: createId('growth') })
   }
 
+  function updateGrowthRecord(id, payload) {
+    const index = state.growthRecords.findIndex((record) => record.id === id)
+    if (index === -1) return
+    state.growthRecords[index] = { ...state.growthRecords[index], ...payload, id }
+  }
+
+  function deleteGrowthRecord(id) {
+    state.growthRecords = state.growthRecords.filter((record) => record.id !== id)
+  }
+
   function addPestRecord(payload) {
     state.pestRecords.unshift({ ...payload, id: createId('pest') })
+  }
+
+  function updatePestRecord(id, payload) {
+    const index = state.pestRecords.findIndex((record) => record.id === id)
+    if (index === -1) return
+    state.pestRecords[index] = { ...state.pestRecords[index], ...payload, id }
+  }
+
+  function deletePestRecord(id) {
+    state.pestRecords = state.pestRecords.filter((record) => record.id !== id)
   }
 
   function getPlantTimeline(plantId) {
@@ -168,8 +213,14 @@ export function useGardenStore() {
     leaderboards,
     addPlant,
     addCareRecord,
+    updateCareRecord,
+    deleteCareRecord,
     addGrowthRecord,
+    updateGrowthRecord,
+    deleteGrowthRecord,
     addPestRecord,
+    updatePestRecord,
+    deletePestRecord,
     getPlantTimeline,
     getPlantGrowth,
   }

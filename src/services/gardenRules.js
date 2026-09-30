@@ -47,29 +47,47 @@ export function buildTimeline(plantId, careRecords, growthRecords, pestRecords) 
     .filter((record) => record.plantId === plantId)
     .map((record) => ({
       id: record.id,
+      kind: 'care',
       date: record.date,
       title: record.type,
       detail: record.note || record.amount || '已记录养护操作',
       photo: record.photo,
+      raw: { ...record },
     }))
   const growthItems = growthRecords
     .filter((record) => record.plantId === plantId)
     .map((record) => ({
       id: record.id,
+      kind: 'growth',
       date: record.date,
       title: '生长指标',
       detail: `高度 ${record.height || 0} cm，叶片 ${record.leafCount || 0} 片，${record.bloomState}`,
+      raw: { ...record },
     }))
   const pestItems = pestRecords
     .filter((record) => record.plantId === plantId)
     .map((record) => ({
       id: record.id,
+      kind: 'pest',
       date: record.date,
       title: '病虫害记录',
       detail: `${record.symptom}；${record.recovery || '恢复情况待观察'}`,
+      raw: { ...record },
     }))
 
   return [...careItems, ...growthItems, ...pestItems].sort((a, b) => b.date.localeCompare(a.date))
+}
+
+// 从养护记录中重新计算某株植物的上次浇水日期。
+// 浇水记录增删改后必须调用，否则待浇水提醒、逾期状态会继续沿用旧日期。
+// 没有剩余浇水记录时回退到购买日期，保证 getWateringStatus 有正确基准。
+export function getLastWateredDate(plant, careRecords) {
+  const latest = careRecords
+    .filter((record) => record.plantId === plant.id && record.type === '浇水')
+    .map((record) => record.date)
+    .sort()
+    .pop()
+  return latest || plant.purchaseDate || todayISO()
 }
 
 export function calculateAchievements(plants, careRecords, growthRecords, pestRecords, goals) {

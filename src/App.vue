@@ -19,11 +19,29 @@ const {
   leaderboards,
   addPlant,
   addCareRecord,
+  updateCareRecord,
+  deleteCareRecord,
   addGrowthRecord,
+  updateGrowthRecord,
+  deleteGrowthRecord,
   addPestRecord,
+  updatePestRecord,
+  deletePestRecord,
   getPlantTimeline,
   getPlantGrowth,
 } = useGardenStore()
+
+function handleUpdateRecord({ kind, id, payload }) {
+  if (kind === 'care') updateCareRecord(id, payload)
+  else if (kind === 'growth') updateGrowthRecord(id, payload)
+  else if (kind === 'pest') updatePestRecord(id, payload)
+}
+
+function handleDeleteRecord({ kind, id }) {
+  if (kind === 'care') deleteCareRecord(id)
+  else if (kind === 'growth') deleteGrowthRecord(id)
+  else if (kind === 'pest') deletePestRecord(id)
+}
 </script>
 
 <template>
@@ -62,6 +80,8 @@ const {
       :get-plant-growth="getPlantGrowth"
       :get-plant-timeline="getPlantTimeline"
       :plants="state.plants"
+      @delete-record="handleDeleteRecord"
+      @update-record="handleUpdateRecord"
     />
   </main>
 </template>
