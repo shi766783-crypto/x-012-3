@@ -5,6 +5,13 @@ export function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+export function getLatestWateringDate(careRecords, plantId) {
+  return careRecords.reduce((latest, record) => {
+    if (record.plantId !== plantId || record.type !== '浇水' || !record.date) return latest
+    return !latest || record.date.localeCompare(latest) > 0 ? record.date : latest
+  }, '')
+}
+
 export function getWateringStatus(plant, today = todayISO()) {
   const lastWatered = plant.lastWateredDate || plant.purchaseDate || today
   const elapsed = daysBetween(lastWatered, today)

@@ -188,6 +188,91 @@ textarea {
   background: #49633f;
 }
 
+.cancel-action {
+  border: 1px solid #cfdac7;
+  color: #465448;
+  background: #fffef8;
+}
+
+.danger-action {
+  color: #9f372f;
+}
+
+.form-actions,
+.record-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+.record-actions button {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.85rem;
+}
+
+.record-photo-preview {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #d8e2cf;
+  border-radius: 8px;
+}
+
+.record-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #dce5d5;
+}
+
+.record-list h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.record-empty {
+  margin: 0;
+  color: #788477;
+  font-size: 0.9rem;
+}
+
+.record-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e0e7d9;
+  border-radius: 8px;
+  background: #fffdf5;
+}
+
+.record-content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.record-content time {
+  color: #7a856f;
+  font-size: 0.82rem;
+}
+
+.record-content p {
+  margin: 0;
+  color: #657266;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
 .reminder-list,
 .plant-grid,
 .records-grid,

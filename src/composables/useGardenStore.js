@@ -9,6 +9,7 @@ import {
   createId,
   getDashboard,
   getDueWateringPlants,
+  getLatestWateringDate,
   getWateringStatus,
   updateWateringGoal,
 } from '../services/gardenRules'
@@ -98,6 +99,17 @@ const demoState = {
   goals: DEFAULT_GOALS,
 }
 
+function updateRecord(records, id, payload) {
+  const index = records.findIndex((record) => record.id === id)
+  if (index === -1) return
+  records.splice(index, 1, { ...records[index], ...payload, id })
+}
+
+function deleteRecord(records, id) {
+  const index = records.findIndex((record) => record.id === id)
+  if (index !== -1) records.splice(index, 1)
+}
+
 export function useGardenStore() {
   const storedState = loadGardenState()
   const state = reactive(storedState || demoState)
@@ -131,21 +143,61 @@ export function useGardenStore() {
   }
 
   function addCareRecord(payload) {
-    const record = { ...payload, id: createId('care') }
-    state.careRecords.unshift(record)
+    state.careRecords.unshift({ ...payload, id: createId('care') })
+    if (payload.type === '浇水') syncPlantWateringDate(payload.plantId)
+  }
 
-    if (record.type === '浇水') {
-      const plant = state.plants.find((item) => item.id === record.plantId)
-      if (plant) plant.lastWateredDate = record.date
+  function updateCareRecord(id, payload) {
+    const index = state.careRecords.findIndex((record) => record.id === id)
+    if (index === -1) return
+
+    const current = state.careRecords[index]
+    const affectedPlantIds = new Set()
+    if (current.type === '浇水' || payload.type === '浇水') {
+      if (current.plantId) affectedPlantIds.add(current.plantId)
+      if (payload.plantId) affectedPlantIds.add(payload.plantId)
     }
+
+    state.careRecords.splice(index, 1, { ...current, ...payload, id })
+    affectedPlantIds.forEach(syncPlantWateringDate)
+  }
+
+  function deleteCareRecord(id) {
+    const index = state.careRecords.findIndex((record) => record.id === id)
+    if (index === -1) return
+
+    const record = state.careRecords[index]
+    state.careRecords.splice(index, 1)
+    if (record.type === '浇水') syncPlantWateringDate(record.plantId)
   }
 
   function addGrowthRecord(payload) {
     state.growthRecords.unshift({ ...payload, id: createId('growth') })
   }
 
+  function updateGrowthRecord(id, payload) {
+    updateRecord(state.growthRecords, id, payload)
+  }
+
+  function deleteGrowthRecord(id) {
+    deleteRecord(state.growthRecords, id)
+  }
+
   function addPestRecord(payload) {
     state.pestRecords.unshift({ ...payload, id: createId('pest') })
+  }
+
+  function updatePestRecord(id, payload) {
+    updateRecord(state.pestRecords, id, payload)
+  }
+
+  function deletePestRecord(id) {
+    deleteRecord(state.pestRecords, id)
+  }
+
+  function syncPlantWateringDate(plantId) {
+    const plant = state.plants.find((item) => item.id === plantId)
+    if (plant) plant.lastWateredDate = getLatestWateringDate(state.careRecords, plantId)
   }
 
   function getPlantTimeline(plantId) {
@@ -168,8 +220,14 @@ export function useGardenStore() {
     leaderboards,
     addPlant,
     addCareRecord,
+    updateCareRecord,
+    deleteCareRecord,
     addGrowthRecord,
+    updateGrowthRecord,
+    deleteGrowthRecord,
     addPestRecord,
+    updatePestRecord,
+    deletePestRecord,
     getPlantTimeline,
     getPlantGrowth,
   }

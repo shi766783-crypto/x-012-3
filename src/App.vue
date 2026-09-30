@@ -19,8 +19,14 @@ const {
   leaderboards,
   addPlant,
   addCareRecord,
+  updateCareRecord,
+  deleteCareRecord,
   addGrowthRecord,
+  updateGrowthRecord,
+  deleteGrowthRecord,
   addPestRecord,
+  updatePestRecord,
+  deletePestRecord,
   getPlantTimeline,
   getPlantGrowth,
 } = useGardenStore()
@@ -47,10 +53,19 @@ const {
     </section>
 
     <RecordForms
+      :care-records="state.careRecords"
+      :growth-records="state.growthRecords"
+      :pest-records="state.pestRecords"
       :plants="state.plants"
       @care="addCareRecord"
+      @update-care="updateCareRecord"
+      @delete-care="deleteCareRecord"
       @growth="addGrowthRecord"
+      @update-growth="updateGrowthRecord"
+      @delete-growth="deleteGrowthRecord"
       @pest="addPestRecord"
+      @update-pest="updatePestRecord"
+      @delete-pest="deletePestRecord"
     />
 
     <Leaderboards :leaderboards="leaderboards" />
